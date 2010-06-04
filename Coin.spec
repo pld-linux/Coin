@@ -86,8 +86,8 @@ find '(' -name '*~' -o -name '*.orig' ')' -print0 | xargs -0 -r -l512 rm -f
 # %{__make}
 
 %{__make} \
-	CFLAGS="%{rpmcflags} %{specflags}" \
-	CPPFLAGS="%{rpmcppflags} %{specflags}" \
+	CFLAGS="%{rpmcflags}" \
+	CPPFLAGS="%{rpmcppflags}" \
 	LDFLAGS="%{rpmldflags} -ldl -lGL -lX11 -lgthread"
 
 %install
