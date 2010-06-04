@@ -1,43 +1,31 @@
 #
-######		Unknown group!
 Summary:	High-level, retained-mode toolkit for effective 3D graphics development
 Summary(pl.UTF-8):	Zbiór narzędzi wysokiego poziomu do efektywnego rozwijania grafiki 3D.
 Name:		Coin
 Version:	3.1.3
 Release:	0.1
 License:	GPL
-Group:		Productivity/Other
+Group:		X11/Libraries
 Source0:	http://ftp.coin3d.org/coin/src/all/%{name}-%{version}.tar.gz
 # Source0-md5:	1538682f8d92cdf03e845c786879fbea
 URL:		http://www.coin3d.org/
-#BuildRequires:	-
-#BuildRequires:	autoconf
-#BuildRequires:	automake
-#BuildRequires:	intltool
-#BuildRequires:	libtool
-#Requires(postun):	-
-#Requires(pre,post):	-
-#Requires(preun):	-
-#Requires:	-
-#Provides:	-
-#Provides:	group(foo)
-#Provides:	user(foo)
-#Obsoletes:	-
-#Conflicts:	-
-#BuildArch:	noarch
-#ExclusiveArch:	%{ix86}
+BuildRequires:	OpenGL-GLU-devel
+BuildRequires:	OpenGL-devel
+BuildRequires:	automake
+BuildRequires:	libstdc++-devel
+BuildRequires:	xorg-lib-libX11-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
+%define specflags -DCOIN_INTERNAL -DCOIN_DEBUG=0
+
 %description
-
-%description -l pl.UTF-8
-
-
+High-level, retained-mode toolkit for effective 3D graphics
+development
 
 %package devel
 Summary:	Header files for ... library
 Summary(pl.UTF-8):	Pliki nagłówkowe biblioteki ...
-Group:		Development/Libraries
+Group:		X11/Development/Libraries
 # if base package contains shared library for which these headers are
 Requires:	%{name} = %{version}-%{release}
 # if -libs package contains shared library for which these headers are
@@ -80,15 +68,10 @@ find '(' -name '*~' -o -name '*.orig' ')' -print0 | xargs -0 -r -l512 rm -f
 # if not running libtool or automake, but config.sub is too old:
 # cp -f /usr/share/automake/config.sub .
 %configure \
-	  --enable-system-expat
-
-%define specflags -DCOIN_INTERNAL -DCOIN_DEBUG=0
-# %{__make}
+	--enable-system-expat
 
 %{__make} \
-	CFLAGS="%{rpmcflags}" \
-	CPPFLAGS="%{rpmcppflags}" \
-	LDFLAGS="%{rpmldflags} -ldl -lGL -lX11 -lgthread"
+	LIBS="-ldl -lGL -X11 -lpthread"
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -115,15 +98,14 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc AUTHORS ChangeLog NEWS README THANKS
 %attr(755,root,root) %{_bindir}/coin-config
+%attr(755,root,root) %{_libdir}/libCoin.so.*.*.*
 %{_datadir}/%{name}
-%attr(755,root,root) %{_libdir}/lib*.so.*.*.*
-
 
 %files devel
 %defattr(644,root,root,755)
 # %doc devel-doc/*
-%{_libdir}/lib*.so
-%{_libdir}/lib*.la
+%{_libdir}/libCoin.so
+%{_libdir}/libCoin.la
 %{_includedir}/Inventor
 %{_includedir}/SoDebug.h
 %{_includedir}/SoWinEnterScope.h
