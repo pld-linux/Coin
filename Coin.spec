@@ -1,6 +1,6 @@
 #
 Summary:	High-level, retained-mode toolkit for effective 3D graphics development
-Summary(pl.UTF-8):	Zbiór narzędzi wysokiego poziomu do efektywnego rozwijania grafiki 3D.
+Summary(pl.UTF-8):	Zbiór narzędzi wysokiego poziomu do efektywnego rozwijania grafiki 3D
 Name:		Coin
 Version:	3.1.3
 Release:	0.1
@@ -20,7 +20,7 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
 High-level, retained-mode toolkit for effective 3D graphics
-development
+development.
 
 %package devel
 Summary:	Header files for ... library
