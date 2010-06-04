@@ -1,9 +1,3 @@
-# TODO: 
-# 	Make it build :( 
-
-# Conditional build:
-%bcond_with	tests		# build with tests
-%bcond_without	tests		# build without tests
 #
 ######		Unknown group!
 Summary:	High-level, retained-mode toolkit for effective 3D graphics development
@@ -13,18 +7,9 @@ Version:	3.1.3
 Release:	0.1
 License:	GPL
 Group:		Productivity/Other
-# http://ftp.coin3d.org/coin/src/all/Coin-3.1.3.tar.gz
 Source0:	http://ftp.coin3d.org/coin/src/all/%{name}-%{version}.tar.gz
 # Source0-md5:	1538682f8d92cdf03e845c786879fbea
-#Source1:	-
-# Source1-md5:	-
 URL:		http://www.coin3d.org/
-#Patch0: %{name}-DESTDIR.patch
-%if %{with initscript}
-BuildRequires:	rpmbuild(macros) >= 1.228
-Requires(post,preun):	/sbin/chkconfig
-Requires:	rc-scripts
-%endif
 #BuildRequires:	-
 #BuildRequires:	autoconf
 #BuildRequires:	automake
@@ -47,31 +32,14 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description -l pl.UTF-8
 
-%package subpackage
-######		Unknown group!
-Summary:	-
-Summary(pl.UTF-8):	-
-Group:		-
 
-%description subpackage
-
-%description subpackage -l pl.UTF-8
-
-%package libs
-Summary:	-
-Summary(pl.UTF-8):	-
-Group:		Libraries
-
-%description libs
-
-%description libs -l pl.UTF-8
 
 %package devel
 Summary:	Header files for ... library
 Summary(pl.UTF-8):	Pliki nagłówkowe biblioteki ...
 Group:		Development/Libraries
 # if base package contains shared library for which these headers are
-#Requires:	%{name} = %{version}-%{release}
+Requires:	%{name} = %{version}-%{release}
 # if -libs package contains shared library for which these headers are
 #Requires:	%{name}-libs = %{version}-%{release}
 
@@ -81,17 +49,6 @@ Header files for ... library.
 %description devel -l pl.UTF-8
 Pliki nagłówkowe biblioteki ....
 
-%package static
-Summary:	Static ... library
-Summary(pl.UTF-8):	Statyczna biblioteka ...
-Group:		Development/Libraries
-Requires:	%{name}-devel = %{version}-%{release}
-
-%description static
-Static ... library.
-
-%description static -l pl.UTF-8
-Statyczna biblioteka ....
 
 %prep
 %setup -q
@@ -125,11 +82,13 @@ find '(' -name '*~' -o -name '*.orig' ')' -print0 | xargs -0 -r -l512 rm -f
 %configure \
 	  --enable-system-expat
 
-%{__make}
+%define specflags -DCOIN_INTERNAL -DCOIN_DEBUG=0
+# %{__make}
 
-#%{__make} \
-#	CFLAGS="%{rpmcflags}" \
-#	LDFLAGS="%{rpmldflags}"
+%{__make} \
+	CFLAGS="%{rpmcflags} %{specflags}" \
+	CPPFLAGS="%{rpmcppflags} %{specflags}" \
+	LDFLAGS="%{rpmldflags} -ldl -lGL -lX11 -lgthread"
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -146,60 +105,28 @@ install -d $RPM_BUILD_ROOT/etc/{sysconfig,rc.d/init.d}
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%pre
-%groupadd -g xxx %{name}
-%useradd -u xxx -d /var/lib/%{name} -g %{name} -c "XXX User" %{name}
-
-%post
-
-%preun
-
-%postun
-if [ "$1" = "0" ]; then
-	%userremove %{name}
-	%groupremove %{name}
-fi
 
 %if %{with ldconfig}
 %post	-p /sbin/ldconfig
 %postun	-p /sbin/ldconfig
 %endif
 
-%if %{with initscript}
-%post init
-/sbin/chkconfig --add %{name}
-%service %{name} restart
-
-%preun init
-if [ "$1" = "0" ]; then
-	%service -q %{name} stop
-	/sbin/chkconfig --del %{name}
-fi
-%endif
-
 %files
 %defattr(644,root,root,755)
-%doc AUTHORS CREDITS ChangeLog NEWS README THANKS TODO
-
-%if 0
-# if _sysconfdir != %{_sysconfdir}:
-#%%dir %{_sysconfdir}
-%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/*
-%attr(755,root,root) %{_bindir}/*
+%doc AUTHORS ChangeLog NEWS README THANKS
+%attr(755,root,root) %{_bindir}/coin-config
 %{_datadir}/%{name}
-%endif
+%attr(755,root,root) %{_libdir}/lib*.so.*.*.*
 
-# initscript and its config
-%if %{with initscript}
-%attr(754,root,root) /etc/rc.d/init.d/%{name}
-%config(noreplace) %verify(not md5 mtime size) /etc/sysconfig/%{name}
-%endif
 
-#%{_examplesdir}/%{name}-%{version}
-
-%if %{with subpackage}
-%files subpackage
+%files devel
 %defattr(644,root,root,755)
-#%doc extras/*.gz
-#%{_datadir}/%{name}-ext
-%endif
+# %doc devel-doc/*
+%{_libdir}/lib*.so
+%{_libdir}/lib*.la
+%{_includedir}/Inventor
+%{_includedir}/SoDebug.h
+%{_includedir}/SoWinEnterScope.h
+%{_includedir}/SoWinLeaveScope.h
+%{_aclocaldir}/*.m4
+%{_pkgconfigdir}/*.pc
