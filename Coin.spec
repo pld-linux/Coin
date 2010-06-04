@@ -71,7 +71,7 @@ find '(' -name '*~' -o -name '*.orig' ')' -print0 | xargs -0 -r -l512 rm -f
 	--enable-system-expat
 
 %{__make} \
-	LIBS="-ldl -lGL -X11 -lpthread"
+	LIBS="-ldl -lGL -lX11 -lpthread"
 
 %install
 rm -rf $RPM_BUILD_ROOT
