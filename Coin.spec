@@ -27,8 +27,6 @@ BuildRequires:	xorg-lib-libX11-devel
 BuildRequires:	zlib-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
-#define specflags -DCOIN_INTERNAL -DCOIN_DEBUG=0
-
 %description
 High-level, retained-mode toolkit for effective 3D graphics
 development. It's fully compatible with SGI Open Inventor 2.1.
@@ -43,6 +41,8 @@ Summary:	Header files for Coin3D library
 Summary(pl.UTF-8):	Pliki nagłówkowe biblioteki Coin3D
 Group:		X11/Development/Libraries
 Requires:	%{name} = %{version}-%{release}
+Obsoletes:	openinventor-devel
+Obsoletes:	sgi-OpenInventor-devel
 
 %description devel
 Header files for Coin3D library.
