@@ -1,0 +1,23 @@
+--- Coin-3.1.3/include/Inventor/SbBasic.h.orig	2010-03-02 14:20:09.000000000 +0100
++++ Coin-3.1.3/include/Inventor/SbBasic.h	2014-11-02 21:47:43.939298989 +0100
+@@ -25,6 +25,9 @@
+ \**************************************************************************/
+ 
+ #include <Inventor/C/basic.h>
++#ifndef NDEBUG
++#include <Inventor/C/errors/debugerror.h>
++#endif
+ 
+ /* ********************************************************************** */
+ /* Trap people trying to use Inventor headers while compiling C source code.
+--- Coin-3.1.3/src/fonts/freetype.cpp.orig	2010-03-02 14:20:09.000000000 +0100
++++ Coin-3.1.3/src/fonts/freetype.cpp	2014-11-03 21:09:52.395768445 +0100
+@@ -38,7 +38,7 @@
+ #include "config.h"
+ #endif /* HAVE_CONFIG_H */
+ 
+-#include <stdlib.h>
++#include <cstdlib>
+ #include <assert.h>
+ 
+ #include "glue/freetype.h"

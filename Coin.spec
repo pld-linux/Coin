@@ -1,114 +1,164 @@
 #
+# Conditional build:
+%bcond_without	static_libs	# static library
+#
 Summary:	High-level, retained-mode toolkit for effective 3D graphics development
-Summary(pl.UTF-8):	Zbiór narzędzi wysokiego poziomu do efektywnego rozwijania grafiki 3D
+Summary(pl.UTF-8):	Wysokopoziomowy toolkit do efektywnego rozwijania grafiki 3D
 Name:		Coin
 Version:	3.1.3
-Release:	0.1
-License:	GPL
+Release:	1
+License:	GPL or Coin PEL or Coin EL
 Group:		X11/Libraries
-Source0:	http://ftp.coin3d.org/coin/src/all/%{name}-%{version}.tar.gz
+Source0:	https://bitbucket.org/Coin3D/coin/downloads/%{name}-%{version}.tar.gz
 # Source0-md5:	1538682f8d92cdf03e845c786879fbea
+Patch0:		%{name}-build.patch
+Patch1:		%{name}-pc.patch
+Patch2:		%{name}-format.patch
 URL:		http://www.coin3d.org/
+BuildRequires:	OpenAL-devel
 BuildRequires:	OpenGL-GLU-devel
 BuildRequires:	OpenGL-devel
-BuildRequires:	automake
+BuildRequires:	bzip2-devel
+BuildRequires:	fontconfig-devel
+BuildRequires:	freetype-devel >= 2
+#BuildRequires:	js-devel
 BuildRequires:	libstdc++-devel
 BuildRequires:	xorg-lib-libX11-devel
+BuildRequires:	zlib-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
-%define specflags -DCOIN_INTERNAL -DCOIN_DEBUG=0
+#define specflags -DCOIN_INTERNAL -DCOIN_DEBUG=0
 
 %description
 High-level, retained-mode toolkit for effective 3D graphics
-development.
+development. It's fully compatible with SGI Open Inventor 2.1.
+
+%description -l pl.UTF-8
+Wysokopoziomowy toolkit trybu przechowującego do efektywnego
+rozwijania grafiki 3D. Jest w pełni kompatybilny z pakietem SGI Open
+Inventor 2.1.
 
 %package devel
-Summary:	Header files for ... library
-Summary(pl.UTF-8):	Pliki nagłówkowe biblioteki ...
+Summary:	Header files for Coin3D library
+Summary(pl.UTF-8):	Pliki nagłówkowe biblioteki Coin3D
 Group:		X11/Development/Libraries
-# if base package contains shared library for which these headers are
 Requires:	%{name} = %{version}-%{release}
-# if -libs package contains shared library for which these headers are
-#Requires:	%{name}-libs = %{version}-%{release}
 
 %description devel
-Header files for ... library.
+Header files for Coin3D library.
 
 %description devel -l pl.UTF-8
-Pliki nagłówkowe biblioteki ....
+Pliki nagłówkowe biblioteki Coin3D.
 
+%package static
+Summary:	Static Coin3D library
+Summary(pl.UTF-8):	Statyczna biblioteka Coin3D
+Group:		X11/Development/Libraries
+Requires:	%{name}-devel = %{version}-%{release}
+
+%description static
+Static Coin3D library.
+
+%description static -l pl.UTF-8
+Statyczna biblioteka Coin3D.
 
 %prep
 %setup -q
-#%setup -q -c -T
-#%setup -q -n %{name}
-#%setup -q -n %{name}-%{version}.orig -a 1
-#%patch0 -p1
-
-# undos the source
-#find '(' -name '*.php' -o -name '*.inc' ')' -print0 | xargs -0 %{__sed} -i -e 's,\r$,,'
-
-# remove CVS control files
-#find -name CVS -print0 | xargs -0 rm -rf
-
-# you'll need this if you cp -a complete dir in source
-# cleanup backups after patching
-find '(' -name '*~' -o -name '*.orig' ')' -print0 | xargs -0 -r -l512 rm -f
+%patch0 -p1
+%patch1 -p1
+%patch2 -p1
 
 %build
-# if ac/am/* rebuilding is necessary, do it in this order and add
-# appropriate BuildRequires
-#%%{__intltoolize}
-#%%{__gettextize}
-#%%{__libtoolize}
-#%%{__aclocal}
-#%%{__autoconf}
-#%%{__autoheader}
-#%%{__automake}
-# if not running libtool or automake, but config.sub is too old:
-# cp -f /usr/share/automake/config.sub .
+# must include COIN_INTERNAL and COIN_DEBUG in CFLAGS/CXXFLAGS, because
+# internal CPPFLAGS are not propagated everywhere
+CFLAGS="%{rpmcflags} -DCOIN_INTERNAL -DCOIN_DEBUG=0"
+CXXFLAGS="%{rpmcxxflags} -DCOIN_INTERNAL -DCOIN_DEBUG=0"
 %configure \
-	--enable-system-expat
+	--enable-3ds-import \
+	--disable-debug \
+	--enable-java-wrapper \
+	--enable-man \
+	%{?with_static_libs:--enable-static} \
+	--enable-system-expat \
+	--enable-threadsafe
 
+# FIXME: don't use global LIBS to fix libCoin.la linking
+# (but cannot regenerate ac/am because of missing m4 files)
 %{__make} \
 	LIBS="-ldl -lGL -lX11 -lpthread"
 
 %install
 rm -rf $RPM_BUILD_ROOT
-# create directories if necessary
-#install -d $RPM_BUILD_ROOT
-%if %{with initscript}
-install -d $RPM_BUILD_ROOT/etc/{sysconfig,rc.d/init.d}
-%endif
-#install -d $RPM_BUILD_ROOT%{_examplesdir}/%{name}-%{version}
+
+# sanitize file list
+%{__sed} -i -ne '/^S/p' man/man3/filelist.txt
 
 %{__make} install \
 	DESTDIR=$RPM_BUILD_ROOT
 
+# obsoleted by pkg-config
+%{__rm} $RPM_BUILD_ROOT%{_libdir}/libCoin.la
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-
-%if %{with ldconfig}
 %post	-p /sbin/ldconfig
 %postun	-p /sbin/ldconfig
-%endif
 
 %files
 %defattr(644,root,root,755)
-%doc AUTHORS ChangeLog NEWS README THANKS
+%doc AUTHORS COPYING ChangeLog FAQ FAQ.legal NEWS README README.UNIX RELNOTES THANKS
 %attr(755,root,root) %{_bindir}/coin-config
 %attr(755,root,root) %{_libdir}/libCoin.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libCoin.so.60
 %{_datadir}/%{name}
+%{_mandir}/man1/coin-config.1*
 
 %files devel
 %defattr(644,root,root,755)
-# %doc devel-doc/*
-%{_libdir}/libCoin.so
-%{_libdir}/libCoin.la
-%{_includedir}/Inventor
+%attr(755,root,root) %{_libdir}/libCoin.so
+%dir %{_includedir}/Inventor
+%{_includedir}/Inventor/C
+%{_includedir}/Inventor/VRMLnodes
+%{_includedir}/Inventor/actions
+%{_includedir}/Inventor/annex
+%{_includedir}/Inventor/bundles
+%{_includedir}/Inventor/caches
+%{_includedir}/Inventor/collision
+%{_includedir}/Inventor/details
+%{_includedir}/Inventor/draggers
+%{_includedir}/Inventor/elements
+%{_includedir}/Inventor/engines
+%{_includedir}/Inventor/errors
+%{_includedir}/Inventor/events
+%{_includedir}/Inventor/fields
+%{_includedir}/Inventor/lists
+%{_includedir}/Inventor/lock
+%{_includedir}/Inventor/manips
+%{_includedir}/Inventor/misc
+%{_includedir}/Inventor/nodekits
+%{_includedir}/Inventor/nodes
+%{_includedir}/Inventor/projectors
+%{_includedir}/Inventor/scxml
+%{_includedir}/Inventor/sensors
+%{_includedir}/Inventor/system
+%{_includedir}/Inventor/threads
+%{_includedir}/Inventor/tools
+%{_includedir}/Inventor/Sb*.h
+%{_includedir}/Inventor/So*.h
+%{_includedir}/Inventor/non_winsys.h
+%{_includedir}/Inventor/oivwin32.h
 %{_includedir}/SoDebug.h
 %{_includedir}/SoWinEnterScope.h
 %{_includedir}/SoWinLeaveScope.h
-%{_aclocaldir}/*.m4
-%{_pkgconfigdir}/*.pc
+%{_pkgconfigdir}/Coin.pc
+%{_aclocaldir}/coin.m4
+%{_mandir}/man3/Sb*.3*
+%{_mandir}/man3/Sc*.3*
+%{_mandir}/man3/So*.3*
+
+%if %{with static_libs}
+%files static
+%defattr(644,root,root,755)
+%{_libdir}/libCoin.a
+%endif
