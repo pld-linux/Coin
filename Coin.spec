@@ -1,12 +1,12 @@
 #
 # Conditional build:
 %bcond_without	static_libs	# static library
-#
+
 Summary:	High-level, retained-mode toolkit for effective 3D graphics development
 Summary(pl.UTF-8):	Wysokopoziomowy toolkit do efektywnego rozwijania grafiki 3D
 Name:		Coin
 Version:	3.1.3
-Release:	1
+Release:	2
 License:	GPL or Coin PEL or Coin EL
 Group:		X11/Libraries
 Source0:	https://bitbucket.org/Coin3D/coin/downloads/%{name}-%{version}.tar.gz
@@ -108,15 +108,16 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc AUTHORS COPYING ChangeLog FAQ FAQ.legal NEWS README README.UNIX RELNOTES THANKS
-%attr(755,root,root) %{_bindir}/coin-config
 %attr(755,root,root) %{_libdir}/libCoin.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libCoin.so.60
 %{_datadir}/%{name}
-%{_mandir}/man1/coin-config.1*
+%exclude %{_datadir}/%{name}/conf/coin-default.cfg
 
 %files devel
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_libdir}/libCoin.so
+%attr(755,root,root) %{_bindir}/coin-config
+%{_datadir}/%{name}/conf/coin-default.cfg
 %dir %{_includedir}/Inventor
 %{_includedir}/Inventor/C
 %{_includedir}/Inventor/VRMLnodes
@@ -153,6 +154,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/SoWinLeaveScope.h
 %{_pkgconfigdir}/Coin.pc
 %{_aclocaldir}/coin.m4
+%{_mandir}/man1/coin-config.1*
 %{_mandir}/man3/Sb*.3*
 %{_mandir}/man3/Sc*.3*
 %{_mandir}/man3/So*.3*
