@@ -18,6 +18,7 @@ URL:		http://www.coin3d.org/
 BuildRequires:	OpenAL-devel
 BuildRequires:	OpenGL-GLU-devel
 BuildRequires:	OpenGL-devel
+BuildRequires:	automake
 BuildRequires:	bzip2-devel
 BuildRequires:	fontconfig-devel
 BuildRequires:	freetype-devel >= 2
