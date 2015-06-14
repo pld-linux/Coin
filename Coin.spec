@@ -15,15 +15,13 @@ Patch0:		%{name}-build.patch
 Patch1:		%{name}-pc.patch
 Patch2:		%{name}-format.patch
 URL:		http://www.coin3d.org/
-BuildRequires:	OpenAL-devel
 BuildRequires:	OpenGL-GLU-devel
 BuildRequires:	OpenGL-devel
 BuildRequires:	automake
 BuildRequires:	bzip2-devel
-BuildRequires:	fontconfig-devel
-BuildRequires:	freetype-devel >= 2
-#BuildRequires:	js-devel
+BuildRequires:	doxygen
 BuildRequires:	libstdc++-devel
+BuildRequires:	pkgconfig
 BuildRequires:	xorg-lib-libX11-devel
 BuildRequires:	zlib-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
