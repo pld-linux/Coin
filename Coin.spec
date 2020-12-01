@@ -1,27 +1,32 @@
 #
 # Conditional build:
+%bcond_without	apidocs		# API documentation (with man pages)
 %bcond_without	static_libs	# static library
 
 Summary:	High-level, retained-mode toolkit for effective 3D graphics development
 Summary(pl.UTF-8):	Wysokopoziomowy toolkit do efektywnego rozwijania grafiki 3D
 Name:		Coin
-Version:	3.1.3
-Release:	2
-License:	GPL or Coin PEL or Coin EL
+Version:	4.0.0
+Release:	1
+License:	BSD
 Group:		X11/Libraries
-Source0:	https://bitbucket.org/Coin3D/coin/downloads/%{name}-%{version}.tar.gz
-# Source0-md5:	1538682f8d92cdf03e845c786879fbea
-Patch0:		%{name}-build.patch
-Patch1:		%{name}-pc.patch
-Patch2:		%{name}-format.patch
-URL:		http://www.coin3d.org/
+Source0:	https://github.com/coin3d/coin/releases/download/%{name}-%{version}/%{name}-%{version}-src.tar.gz
+# Source0-md5:	2377d11b38c8eddd92d8bb240f5bf4ee
+Patch0:		%{name}-link.patch
+URL:		https://github.com/coin3d/coin/wiki
+BuildRequires:	OpenAL-devel
 BuildRequires:	OpenGL-GLU-devel
 BuildRequires:	OpenGL-devel
-BuildRequires:	automake
+BuildRequires:	boost-devel
 BuildRequires:	bzip2-devel
-BuildRequires:	doxygen
+BuildRequires:	cmake >= 3.0
+%{?with_apidocs:BuildRequires:	doxygen}
+BuildRequires:	expat-devel >= 1:2.2.6
+BuildRequires:	fontconfig-devel
+BuildRequires:	freetype-devel >= 2
 BuildRequires:	libstdc++-devel
 BuildRequires:	pkgconfig
+BuildRequires:	simage-devel
 BuildRequires:	xorg-lib-libX11-devel
 BuildRequires:	zlib-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -61,42 +66,84 @@ Static Coin3D library.
 %description static -l pl.UTF-8
 Statyczna biblioteka Coin3D.
 
+%package apidocs
+Summary:	API documentation for Coin library
+Summary(pl.UTF-8):	Dokumentacja API biblioteki Coin
+Group:		Documentation
+%{?noarchpackage}
+
+%description apidocs
+API documentation for Coin library.
+
+%description apidocs -l pl.UTF-8
+Dokumentacja API biblioteki Coin.
+
 %prep
-%setup -q
+%setup -q -n coin
 %patch0 -p1
-%patch1 -p1
-%patch2 -p1
 
 %build
-# must include COIN_INTERNAL and COIN_DEBUG in CFLAGS/CXXFLAGS, because
-# internal CPPFLAGS are not propagated everywhere
-CFLAGS="%{rpmcflags} -DCOIN_INTERNAL -DCOIN_DEBUG=0"
-CXXFLAGS="%{rpmcxxflags} -DCOIN_INTERNAL -DCOIN_DEBUG=0"
-%configure \
-	--enable-3ds-import \
-	--disable-debug \
-	--enable-java-wrapper \
-	--enable-man \
-	%{?with_static_libs:--enable-static} \
-	--enable-system-expat \
-	--enable-threadsafe
+# COIN_HAVE_JAVASCRIPT=OFF because it relies on obsolete JS_GetStringBytes function
+%define cmake_opts \\\
+	-DCOIN_BUILD_TESTS=OFF \\\
+	-DCOIN_HAVE_JAVASCRIPT=OFF \\\
+	-DFONTCONFIG_RUNTIME_LINKING=OFF \\\
+	-DFREETYPE_RUNTIME_LINKING=OFF \\\
+	-DGLU_RUNTIME_LINKING=OFF \\\
+	-DLIBBZIP2_RUNTIME_LINKING=OFF \\\
+	-DOPENAL_RUNTIME_LINKING=OFF \\\
+	-DSIMAGE_RUNTIME_LINKING=OFF \\\
+	-DSPIDERMONKEY_INCLUDE_DIR=/usr/include/js187 \\\
+	-DSPIDERMONKEY_RUNTIME_LINKING=OFF \\\
+	-DZLIB_RUNTIME_LINKING=OFF \\\
+	-DUSE_EXTERNAL_EXPAT=ON
+	
+install -d builddir
+cd builddir
+%cmake .. \
+	%{cmake_opts} \
+%if %{with apidocs}
+	-DCOIN_BUILD_DOCUMENTATION=ON \
+	-DCOIN_BUILD_DOCUMENTATION_MAN=ON
+%endif
 
-# FIXME: don't use global LIBS to fix libCoin.la linking
-# (but cannot regenerate ac/am because of missing m4 files)
-%{__make} \
-	LIBS="-ldl -lGL -lX11 -lpthread"
+%{__make}
+cd ..
+
+%if %{with static_libs}
+install -d builddir-static
+cd builddir-static
+%cmake .. \
+	%{cmake_opts} \
+	-DCOIN_BUILD_SHARED_LIBS=OFF
+
+%{__make}
+cd ..
+%endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-# sanitize file list
-%{__sed} -i -ne '/^S/p' man/man3/filelist.txt
+%if %{with static_libs}
+%{__make} -C builddir-static install \
+	DESTDIR=$RPM_BUILD_ROOT
+%endif
 
-%{__make} install \
+%{__make} -C builddir install \
 	DESTDIR=$RPM_BUILD_ROOT
 
-# obsoleted by pkg-config
-%{__rm} $RPM_BUILD_ROOT%{_libdir}/libCoin.la
+# missed by cmake suite
+install -d $RPM_BUILD_ROOT%{_mandir}/man1
+cp -p man/man1/coin-config.1 $RPM_BUILD_ROOT%{_mandir}/man1
+
+%if %{with apidocs}
+# packaged as %doc
+%{__rm} -r $RPM_BUILD_ROOT%{_docdir}/html
+# too generic names, not public API etc.
+%{__rm} $RPM_BUILD_ROOT%{_mandir}/man3/{JS*,SpiderMonkey_t,VRMLnodes,XML,_*_,[a-z]*}.3
+%endif
+# bogus location
+%{__rm} -r $RPM_BUILD_ROOT%{_infodir}/Coin4
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -108,15 +155,13 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc AUTHORS COPYING ChangeLog FAQ FAQ.legal NEWS README README.UNIX RELNOTES THANKS
 %attr(755,root,root) %{_libdir}/libCoin.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libCoin.so.60
+%attr(755,root,root) %ghost %{_libdir}/libCoin.so.80
 %{_datadir}/%{name}
-%exclude %{_datadir}/%{name}/conf/coin-default.cfg
 
 %files devel
 %defattr(644,root,root,755)
-%attr(755,root,root) %{_libdir}/libCoin.so
 %attr(755,root,root) %{_bindir}/coin-config
-%{_datadir}/%{name}/conf/coin-default.cfg
+%attr(755,root,root) %{_libdir}/libCoin.so
 %dir %{_includedir}/Inventor
 %{_includedir}/Inventor/C
 %{_includedir}/Inventor/VRMLnodes
@@ -136,6 +181,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/Inventor/lock
 %{_includedir}/Inventor/manips
 %{_includedir}/Inventor/misc
+%{_includedir}/Inventor/navigation
 %{_includedir}/Inventor/nodekits
 %{_includedir}/Inventor/nodes
 %{_includedir}/Inventor/projectors
@@ -152,14 +198,23 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/SoWinEnterScope.h
 %{_includedir}/SoWinLeaveScope.h
 %{_pkgconfigdir}/Coin.pc
-%{_aclocaldir}/coin.m4
+%{_libdir}/cmake/Coin-%{version}
 %{_mandir}/man1/coin-config.1*
+%if %{with apidocs}
+%{_mandir}/man3/Coin*.3*
 %{_mandir}/man3/Sb*.3*
 %{_mandir}/man3/Sc*.3*
 %{_mandir}/man3/So*.3*
+%endif
 
 %if %{with static_libs}
 %files static
 %defattr(644,root,root,755)
 %{_libdir}/libCoin.a
+%endif
+
+%if %{with apidocs}
+%files apidocs
+%defattr(644,root,root,755)
+%doc builddir/html/*.{css,html,js,png}
 %endif
