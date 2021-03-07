@@ -70,7 +70,7 @@ Statyczna biblioteka Coin3D.
 Summary:	API documentation for Coin library
 Summary(pl.UTF-8):	Dokumentacja API biblioteki Coin
 Group:		Documentation
-%{?noarchpackage}
+BuildArch:	noarch
 
 %description apidocs
 API documentation for Coin library.
