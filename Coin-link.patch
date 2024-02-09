@@ -1,13 +1,5 @@
 --- coin/CMakeLists.txt.orig	2019-12-23 20:47:43.000000000 +0100
 +++ coin/CMakeLists.txt	2020-11-30 21:32:23.759864515 +0100
-@@ -531,6 +531,7 @@
-   check_library_exists(dl dlopen "" HAVE_DL_LIB)
-   if(HAVE_DL_LIB)
-     check_include_file(dlfcn.h HAVE_DLFCN_H)
-+    list(APPEND COIN_TARGET_LINK_LIBRARIES dl)
-   endif()
-   check_library_exists(dld shl_load "" HAVE_DLD_LIB)
- endif()
 @@ -591,6 +592,7 @@
      #include <GL/glx.h>
      int main() { (void)glXChooseVisual(0L, 0, 0L); glEnd(); return 0; }

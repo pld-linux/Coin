@@ -6,12 +6,12 @@
 Summary:	High-level, retained-mode toolkit for effective 3D graphics development
 Summary(pl.UTF-8):	Wysokopoziomowy toolkit do efektywnego rozwijania grafiki 3D
 Name:		Coin
-Version:	4.0.0
+Version:	4.0.2
 Release:	1
 License:	BSD
 Group:		X11/Libraries
-Source0:	https://github.com/coin3d/coin/releases/download/%{name}-%{version}/%{name}-%{version}-src.tar.gz
-# Source0-md5:	2377d11b38c8eddd92d8bb240f5bf4ee
+Source0:	https://github.com/coin3d/coin/releases/download/v%{version}/coin-%{version}-src.tar.gz
+# Source0-md5:	1dd89262e2e9e44a046e803515387bdf
 Patch0:		%{name}-link.patch
 URL:		https://github.com/coin3d/coin/wiki
 BuildRequires:	OpenAL-devel
@@ -45,8 +45,8 @@ Summary:	Header files for Coin3D library
 Summary(pl.UTF-8):	Pliki nagłówkowe biblioteki Coin3D
 Group:		X11/Development/Libraries
 Requires:	%{name} = %{version}-%{release}
-Obsoletes:	openinventor-devel
-Obsoletes:	sgi-OpenInventor-devel
+Obsoletes:	openinventor-devel < 2.2
+Obsoletes:	sgi-OpenInventor-devel < 2.2
 
 %description devel
 Header files for Coin3D library.
@@ -140,10 +140,8 @@ cp -p man/man1/coin-config.1 $RPM_BUILD_ROOT%{_mandir}/man1
 # packaged as %doc
 %{__rm} -r $RPM_BUILD_ROOT%{_docdir}/html
 # too generic names, not public API etc.
-%{__rm} $RPM_BUILD_ROOT%{_mandir}/man3/{JS*,SpiderMonkey_t,VRMLnodes,XML,_*_,[a-z]*}.3
+%{__rm} $RPM_BUILD_ROOT%{_mandir}/man3/{_*_,[a-z]*}.3
 %endif
-# bogus location
-%{__rm} -r $RPM_BUILD_ROOT%{_infodir}/Coin4
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -153,7 +151,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc AUTHORS COPYING ChangeLog FAQ FAQ.legal NEWS README README.UNIX RELNOTES THANKS
+%doc AUTHORS COPYING ChangeLog FAQ FAQ.legal NEWS README.UNIX README.md RELNOTES THANKS
 %attr(755,root,root) %{_libdir}/libCoin.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libCoin.so.80
 %{_datadir}/%{name}
